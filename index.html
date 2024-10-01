@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Центр управления</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <h1>Центр управления дрона</h1>
+</header>
+
+<main>
+    <section class="control-block">
+        <h2>Команды управления</h2>
+        <button class="control-button" onclick="sendCommand('takeoff')">Взлет</button>
+        <button class="control-button" onclick="sendCommand('land')">Посадка</button>
+
+
+    </section>
+
+    <section class="control-block">
+        <h2>Данные с дрона</h2>
+        <button class="control-button" onclick="sendCommand('accu')">Заряд аккумулятора</button>
+        <button class="control-button"onclick="sendCommand('high_flight')">Высота полета</button>
+    </section>
+
+    <p id="droneStatus">лог запросов: </p>
+    <div id="status" style="border: 1px solid #ccc; padding: 10px; width: 500px; height: 30px; overflow-y: scroll"></div>
+
+    <section class="control-block">
+        <h2>Камера</h2>
+        <button class="control-button" onclick="sendCommand('take_photo')">Сделать фото</button>
+        <button id="open-photo" class="control-button">Открыть фото</button>
+    </section>
+    <!-- Панель для отображения фотографии -->
+        <div id="photo-panel" class="photo-panel">
+            <span id="close-photo" class="close">&times;</span>
+            <img id="photo" src="" alt="Фото">
+        </div>
+</main>
+
+<script>
+        // Открытие фото в правой панели
+        document.getElementById('open-photo').addEventListener('click', function() {
+            const photoPanel = document.getElementById('photo-panel');
+            const photo = document.getElementById('photo');
+            photo.src = "photo.jpg";  // Путь к вашему файлу ph.jpg
+            photoPanel.style.width = "400px";  // Открываем панель
+        });
+
+        // Закрытие фото панели
+        document.getElementById('close-photo').addEventListener('click', function() {
+            document.getElementById('photo-panel').style.width = "0";  // Закрываем панель
+        });
+
+    </script>
+
+<script>
+    // Задание токена для авторизации
+    const token = "valid_token";
+    // Создание нового вебсокет-соединения с сервером с передачей токена в URL
+    const socket = new WebSocket(`ws://localhost:5005/?token=${token}`);
+
+    // Функция для обновления статуса на веб-странице
+    function updateStatus(status) {
+        // Получение элемента для отображения статусов
+        const divStatus = document.getElementById("status");
+        // Создание нового элемента параграфа для нового статуса
+        const newStatus = document.createElement("p");
+        // Установка текста нового статуса
+        newStatus.textContent = status;
+        // Добавление нового статуса в элемент div
+        divStatus.appendChild(newStatus);
+        // Прокрутка вниз для отображения последнего статуса
+        divStatus.scrollTop = divStatus.scrollHeight;
+    }
+
+    // Обновление статуса дрона в отдельном элементе
+    // const pStatus = document.getElementById("droneStatus");
+    // pStatus.textContent = "Статус дрона: " + status;
+
+
+    // Обработчик события открытия соединения
+    socket.onopen = () => {
+        console.log("Соединение установлено");
+    }
+
+    // Обработчик события получения сообщения от сервера
+    socket.onmessage = (event) => {
+        console.log("Сообщение от сервера:", event.data);
+        // Обновление статуса на веб-странице при получении нового сообщения
+        updateStatus(event.data);
+
+    }
+
+
+    // Функция для отправки команд на сервер
+    function sendCommand(command) {
+        // Отправка команды через вебсокет
+        socket.send(command);
+        console.log("Отправлена команда:", command);
+    }
+</script>
+
+</body>
+</html>
